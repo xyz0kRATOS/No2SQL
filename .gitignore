@@ -1,0 +1,34 @@
+# Environment & Secrets
+.env
+.env.local
+
+# User Workspace Data & SQLite Databases
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python build & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Tests & caches
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No2SQL - Ask your data any question in clear English</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="toggle-sidebar-btn" class="icon-btn" title="Toggle Data Schema Sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="brand">
+        <div class="logo-icon">SQL</div>
+        <div class="brand-text">
+          <h1>No2SQL</h1>
+          <p class="tagline">Ask your database any question in clear English</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge badge-db" id="badge-db" title="Active Workspace Database">
+        <span class="badge-dot" id="badge-db-dot"></span>
+        <span id="badge-db-text">No data loaded</span>
+      </div>
+      <div class="badge badge-llm" id="badge-llm-container" title="Gemini Connection Status">
+        <span class="badge-dot" id="badge-llm-dot"></span>
+        <span id="badge-llm-text">Checking Gemini...</span>
+      </div>
+      <button id="open-settings-btn" class="icon-btn btn-settings" title="Settings & Privacy">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout Container -->
+  <div class="app-container">
+    <!-- Sidebar: Schema & Workspace Explorer -->
+    <aside id="schema-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h2>Your Data</h2>
+        <span class="dialect-pill" id="table-count-pill">0 Tables</span>
+      </div>
+      <p class="sidebar-hint" id="sidebar-subhint">Upload files to explore tables and schemas.</p>
+
+      <div class="sidebar-actions-top">
+        <button id="sidebar-upload-trigger-btn" class="btn btn-sm btn-secondary full-width">
+          + Upload More Data
+        </button>
+      </div>
+
+      <div id="schema-tree" class="schema-tree">
+        <div class="empty-schema-state">
+          No tables loaded yet. Upload CSV, Excel, JSON or SQLite files to get started.
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="clear-data-btn" class="btn btn-sm btn-danger full-width" title="Clear all data from workspace">
+          Clear All Data
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+
+      <!-- Upload Section / Card -->
+      <section id="upload-card" class="card upload-card">
+        <div class="card-banner-header">
+          <span class="status-icon">📁</span>
+          <h3>Load Your Data</h3>
+        </div>
+        <p class="section-desc">
+          Upload your files to create a temporary, locally-isolated SQLite database. Supported formats:
+          <strong>.csv, .tsv, .xlsx, .xls, .json, .jsonl, .parquet, .db, .sqlite</strong>.
+          Each Excel sheet becomes its own table.
+        </p>
+
+        <!-- Drag & Drop Zone -->
+        <div id="drop-zone" class="drop-zone">
+          <input type="file" id="file-input" multiple accept=".csv,.tsv,.txt,.xlsx,.xls,.json,.jsonl,.parquet,.db,.sqlite,.sqlite3" class="file-input-hidden" />
+          <div class="drop-content">
+            <svg class="upload-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p class="drop-text"><strong>Drag & drop files here</strong>, or <span class="browse-link">browse</span></p>
+            <span class="drop-subtext">Max upload size: 50 MB total</span>
+          </div>
+        </div>
+
+        <!-- Selected Files List -->
+        <div id="selected-files-container" class="selected-files-container hidden">
+          <h4>Selected Files:</h4>
+          <ul id="selected-files-list" class="file-list"></ul>
+        </div>
+
+        <!-- Upload Options & Button -->
+        <div class="upload-controls">
+          <div class="mode-radios">
+            <label class="radio-label">
+              <input type="radio" name="upload-mode" value="replace" checked />
+              <span>Replace existing data</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="upload-mode" value="append" />
+              <span>Add to existing data</span>
+            </label>
+          </div>
+          <button id="upload-btn" class="btn btn-primary" disabled>
+            <span class="btn-text">Upload & Build Database</span>
+            <span class="spinner hidden" id="upload-spinner"></span>
+          </button>
+        </div>
+
+        <!-- Upload Result / Warnings Box -->
+        <div id="upload-result-box" class="upload-result-box hidden"></div>
+      </section>
+
+      <!-- Empty State Notice (shown when no data is loaded) -->
+      <section id="empty-state-card" class="card empty-state-card">
+        <div class="empty-icon">📊</div>
+        <h2>Upload your data to get started</h2>
+        <p>No2SQL does not ship with any placeholder or fake data. Once you upload your spreadsheet, CSV, or database file above, you can ask any question in natural language.</p>
+      </section>
+
+      <!-- Question Input Card (Visible when data is loaded) -->
+      <section id="query-section" class="card input-card hidden">
+        <div class="input-header">
+          <label for="question-input">Ask a question about your uploaded data:</label>
+          <span class="shortcut-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</span>
+        </div>
+        <textarea
+          id="question-input"
+          placeholder="e.g. Which region generated the highest sales? Or: What is the distribution of active users?"
+          rows="3"
+        ></textarea>
+        
+        <div class="input-actions">
+          <div class="left-actions">
+            <button id="clear-input-btn" class="btn btn-secondary">Clear</button>
+          </div>
+          <button id="generate-btn" class="btn btn-primary">
+            <span class="btn-text">Generate SQL</span>
+            <span class="spinner hidden" id="generate-spinner"></span>
+          </button>
+        </div>
+
+        <!-- Dynamic AI-Suggested Question Chips -->
+        <div id="chips-section" class="chips-container hidden">
+          <span class="chips-label">AI Suggested Questions for your data:</span>
+          <div class="chips-scroll" id="example-chips"></div>
+        </div>
+      </section>
+
+      <!-- Clarification Banner / Card -->
+      <section id="clarification-card" class="card card-amber hidden">
+        <div class="card-banner-header">
+          <span class="status-icon">⚠️</span>
+          <h3>Clarification Needed</h3>
+        </div>
+        <p id="clarification-question-text" class="clarification-text"></p>
+        <div class="clarification-form">
+          <input type="text" id="clarification-input" placeholder="Type your answer to clarify the metric or columns" />
+          <button id="submit-clarification-btn" class="btn btn-amber">Update Question & Regenerate</button>
+        </div>
+      </section>
+
+      <!-- Unsupported / Safety Refusal Card -->
+      <section id="unsupported-card" class="card card-refusal hidden">
+        <div class="card-banner-header">
+          <span class="status-icon" id="unsupported-icon">🛡️</span>
+          <h3 id="unsupported-title">Request Not Executable</h3>
+        </div>
+        <p id="unsupported-message" class="unsupported-text"></p>
+      </section>
+
+      <!-- Generated SQL & Inspection Card -->
+      <section id="result-card" class="card hidden">
+        <!-- Status Banner -->
+        <div id="validation-banner" class="status-banner banner-success">
+          <span class="banner-icon">✓</span>
+          <span id="validation-banner-text">Validated — safe, read-only SELECT query</span>
+        </div>
+
+        <!-- Explanation & Metadata -->
+        <div class="explanation-box">
+          <h4>Plain-English Explanation:</h4>
+          <p id="explanation-text"></p>
+        </div>
+
+        <div id="assumptions-box" class="assumptions-box hidden">
+          <h4>Assumptions:</h4>
+          <ul id="assumptions-list"></ul>
+        </div>
+
+        <div class="pills-row">
+          <div class="pill-group">
+            <span class="pill-group-title">Tables:</span>
+            <div id="tables-pills" class="tags-container"></div>
+          </div>
+          <div class="pill-group">
+            <span class="pill-group-title">Columns:</span>
+            <div id="columns-pills" class="tags-container"></div>
+          </div>
+        </div>
+
+        <!-- SQL Code Panel -->
+        <div class="sql-panel">
+          <div class="sql-header">
+            <span class="sql-label">Generated SQL</span>
+            <button id="copy-sql-btn" class="btn btn-sm btn-secondary" title="Copy SQL to Clipboard">
+              Copy SQL
+            </button>
+          </div>
+          <pre class="sql-code-wrapper"><code id="sql-code-display"></code></pre>
+        </div>
+
+        <!-- Execution Action CTA -->
+        <div class="execution-cta">
+          <div class="cta-notice">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Generating SQL does not run it automatically. Click to execute read-only.</span>
+          </div>
+          <button id="run-query-btn" class="btn btn-run">
+            <span class="btn-text">Run Query</span>
+            <span class="spinner hidden" id="run-spinner"></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Query Results Section -->
+      <section id="results-card" class="card hidden">
+        <div class="results-header">
+          <div class="results-meta">
+            <h3>Query Results</h3>
+            <span id="results-count-badge" class="count-badge">0 rows</span>
+            <span id="results-duration-badge" class="duration-badge">0.0 ms</span>
+            <span id="truncation-warning" class="badge-truncated hidden">Showing first 200 rows (capped for safety)</span>
+          </div>
+          <button id="download-csv-btn" class="btn btn-sm btn-secondary" title="Export as CSV">
+            Download CSV
+          </button>
+        </div>
+
+        <!-- Empty Results Message -->
+        <div id="empty-results-box" class="empty-results-box hidden">
+          <p>No matching records found — this isn't an error, the database contains no matching rows for this condition.</p>
+        </div>
+
+        <!-- Results Table Container -->
+        <div class="table-container" id="table-container">
+          <table id="results-table" class="data-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Session History -->
+      <section id="history-section" class="card history-card hidden">
+        <div class="history-header">
+          <h3>Recent Questions</h3>
+          <button id="clear-history-btn" class="btn-link">Clear</button>
+        </div>
+        <ul id="history-list" class="history-list">
+          <li class="history-empty">No recent questions yet.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <!-- Settings Modal (Clean - No Key Prompting) -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Settings & AI Configuration</h3>
+        <button id="close-settings-btn" class="icon-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="connection-status-box">
+          <div class="status-row">
+            <span>Gemini Status:</span>
+            <strong id="modal-llm-status">Checking...</strong>
+          </div>
+          <div class="status-row">
+            <span>Active Model:</span>
+            <span id="modal-llm-model" class="code-span">gemini-3.8-flash</span>
+          </div>
+          <div class="status-row">
+            <span>Key Location:</span>
+            <span class="code-span">Loaded from .env</span>
+          </div>
+          <button id="test-connection-btn" class="btn btn-sm btn-secondary" style="margin-top: 6px;">
+            Test Connection
+          </button>
+        </div>
+
+        <hr class="modal-divider" />
+
+        <div class="form-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="share-samples-toggle" checked />
+            <span class="toggle-text">Share sample values with the AI (Recommended)</span>
+          </label>
+          <p class="privacy-note">
+            <strong>Privacy Note:</strong> Column names, data types and a few sample distinct values from low-cardinality columns (e.g. status, category) are sent to Google Gemini to help generate accurate SQL filters. Don't upload sensitive data you aren't allowed to share. When toggled OFF, only table and column names are sent.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Preview Modal -->
+  <div id="preview-modal" class="modal-overlay hidden">
+    <div class="modal-card modal-wide">
+      <div class="modal-header">
+        <h3 id="preview-modal-title">Table Preview</h3>
+        <button id="close-preview-btn" class="icon-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-container" id="preview-table-container">
+          <table class="data-table">
+            <thead id="preview-table-head"></thead>
+            <tbody id="preview-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
